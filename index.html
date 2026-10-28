@@ -1,0 +1,702 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>EquipTrust | Institutional Resource & Equipment Sharing Platform</title>
+  <!-- Google Fonts for clean, modern typography -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <!-- Main Stylesheet -->
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+  <!-- TOP DEMO CONTROL BAR FOR HACKATHON JUDGES -->
+  <div class="judge-bar">
+    <div class="container judge-bar-inner">
+      <div class="judge-badge-group">
+        <span class="pulse-dot"></span>
+        <strong>HACKATHON LIVE DEMO:</strong>
+        <span>Switch perspective anytime to test the full 10-step lifecycle</span>
+      </div>
+      <div class="judge-controls">
+        <label for="profileSelector" class="sr-only">Active Demo Profile</label>
+        <select id="profileSelector" class="profile-select" title="Switch active user or manager role">
+          <option value="user_aarav">👤 Student: Aarav Sharma (Certified Maker • 2/6 hrs used)</option>
+          <option value="user_priya">👤 Student: Priya Patel (New User • Needs Safety Cert)</option>
+          <option value="user_vikram">👤 Researcher: Dr. Vikram Nair (Full Lab Clearance)</option>
+          <option value="manager_meera">🛡️ Lab Manager: Prof. Meera Krishnan (Owner & Approver)</option>
+        </select>
+        <button id="openCertModalBtn" class="btn btn-xs btn-outline-light" type="button">
+          🎓 My Certifications
+        </button>
+        <button id="resetDemoBtn" class="btn btn-xs btn-danger-soft" type="button" title="Restore original demo data">
+          ↺ Reset Demo Data
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MAIN HEADER & NAVIGATION -->
+  <header class="site-header">
+    <div class="container header-inner">
+      <div class="brand">
+        <div class="brand-logo" aria-hidden="true">⚡</div>
+        <div>
+          <span class="brand-name">EquipTrust</span>
+          <span class="brand-tag">Verified Institutional Resource Sharing</span>
+        </div>
+      </div>
+
+      <nav class="main-nav" aria-label="Primary Navigation">
+        <button class="nav-tab active" data-tab="exploreTab" type="button">
+          🔍 Explore Resources
+        </button>
+        <button class="nav-tab" data-tab="bookingsTab" type="button">
+          📅 My Bookings & Check-In
+          <span id="myBookingsBadge" class="badge-pill">0</span>
+        </button>
+        <button class="nav-tab" data-tab="managerTab" type="button">
+          🛡️ Owner & Manager Console
+          <span id="pendingManagerBadge" class="badge-pill badge-warning">0</span>
+        </button>
+        <button class="nav-tab" data-tab="auditTab" type="button">
+          📜 Audit Trail & Incidents
+        </button>
+      </nav>
+
+      <div class="header-actions">
+        <button id="notifToggleBtn" class="notif-btn" type="button" aria-label="View Notifications">
+          🔔 <span id="notifCountBadge" class="notif-count">0</span>
+        </button>
+        <button id="openListResourceBtn" class="btn btn-primary btn-sm" type="button">
+          + List Resource
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- NOTIFICATION DROPDOWN PANEL -->
+  <div id="notifDropdown" class="notif-dropdown hidden" role="region" aria-label="Notifications">
+    <div class="notif-header">
+      <h4>System Notifications</h4>
+      <button id="clearNotifsBtn" class="btn-link" type="button">Mark all read</button>
+    </div>
+    <div id="notifList" class="notif-list">
+      <!-- Populated by script.js -->
+    </div>
+  </div>
+
+  <!-- ACTIVE USER STATUS & FAIR-USAGE BANNER -->
+  <section class="user-context-bar">
+    <div class="container context-grid">
+      <div class="user-card-mini">
+        <div class="avatar-circle" id="activeUserAvatar">AS</div>
+        <div>
+          <div class="user-name-row">
+            <strong id="activeUserName">Aarav Sharma</strong>
+            <span id="activeUserRoleBadge" class="role-pill">Verified Student</span>
+          </div>
+          <p id="activeUserDept" class="text-muted text-xs">B.Tech Mechanical Eng • ID: INST-2026-884</p>
+        </div>
+      </div>
+
+      <div class="fair-use-meter-box">
+        <div class="meter-label-row">
+          <span>⚖️ <strong>Weekly Fair-Usage Quota</strong> (Anti-Monopolization Cap)</span>
+          <span id="quotaText">2 / 6 hrs used</span>
+        </div>
+        <div class="progress-track">
+          <div id="quotaProgressBar" class="progress-fill" style="width: 33%;"></div>
+        </div>
+        <p class="text-xs text-muted" id="fairScoreText">
+          Fair-Access Priority Score: <strong>92/100</strong> (High Priority — Zero overdue returns)
+        </p>
+      </div>
+
+      <div class="cert-summary-box">
+        <span class="text-xs font-semibold uppercase tracking-wide text-muted">Active Safety Clearances:</span>
+        <div id="activeUserCertsList" class="cert-badges-row">
+          <!-- Populated dynamically -->
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- INTERACTIVE 10-STEP LIFECYCLE TRACKER -->
+  <section class="lifecycle-banner">
+    <div class="container">
+      <div class="lifecycle-header">
+        <span class="lifecycle-title">🔄 End-to-End Resource Lifecycle Walkthrough:</span>
+        <span class="lifecycle-hint">Click any tab below or follow steps 1–10 to evaluate the complete workflow</span>
+      </div>
+      <div class="lifecycle-steps">
+        <div class="step-pill"><span>1</span> List Resource</div>
+        <div class="step-pill"><span>2</span> Verify Eligibility</div>
+        <div class="step-pill"><span>3</span> Request Slot</div>
+        <div class="step-pill"><span>4</span> Auto-Check Quota</div>
+        <div class="step-pill"><span>5</span> Manager Review</div>
+        <div class="step-pill"><span>6</span> Approve / Waitlist</div>
+        <div class="step-pill"><span>7</span> Check-In Condition</div>
+        <div class="step-pill"><span>8</span> Return & Check-Out</div>
+        <div class="step-pill"><span>9</span> Incident Handling</div>
+        <div class="step-pill"><span>10</span> Immutable Audit</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- MAIN CONTENT CONTAINER -->
+  <main class="container main-content">
+
+    <!-- ==========================================
+         TAB 1: EXPLORE & DISCOVER RESOURCES
+         ========================================== -->
+    <section id="exploreTab" class="tab-panel active">
+      <div class="section-header-row">
+        <div>
+          <h1>Discover Institutional Spaces & Equipment</h1>
+          <p class="text-muted">Browse verified campus labs, fabrication tools, research instruments, and studio gear.</p>
+        </div>
+        <div class="stats-mini-row">
+          <div class="stat-chip">
+            <strong id="statTotalResources">6</strong>
+            <span>Listed Resources</span>
+          </div>
+          <div class="stat-chip">
+            <strong id="statActiveBookings">0</strong>
+            <span>Active Bookings</span>
+          </div>
+          <div class="stat-chip">
+            <strong id="statAuditEvents">0</strong>
+            <span>Logged Audit Events</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- SEARCH & FILTER CONTROLS -->
+      <div class="filter-bar card">
+        <div class="filter-group search-group">
+          <label for="searchInput">Search Equipment, Lab, or Keyword</label>
+          <input type="text" id="searchInput" placeholder="e.g., 3D Printer, Microscope, CNC, Camera, Drone..." />
+        </div>
+
+        <div class="filter-group">
+          <label for="categoryFilter">Category</label>
+          <select id="categoryFilter">
+            <option value="ALL">All Categories</option>
+            <option value="Fabrication & Makerspace">Fabrication & Makerspace</option>
+            <option value="Scientific & Lab">Scientific & Lab</option>
+            <option value="Media & Production">Media & Production</option>
+            <option value="Specialized Space">Specialized Space</option>
+          </select>
+        </div>
+
+        <div class="filter-group">
+          <label for="eligibilityFilter">My Eligibility</label>
+          <select id="eligibilityFilter">
+            <option value="ALL">Show All Resources</option>
+            <option value="ELIGIBLE">✅ Ready to Book (Certified)</option>
+            <option value="NEEDS_CERT">🔒 Needs Safety Training</option>
+          </select>
+        </div>
+
+        <div class="filter-group">
+          <label for="statusFilter">Operational Status</label>
+          <select id="statusFilter">
+            <option value="ALL">All Statuses</option>
+            <option value="AVAILABLE">Available</option>
+            <option value="MAINTENANCE">Flagged / Maintenance</option>
+          </select>
+        </div>
+
+        <div class="filter-actions">
+          <button id="resetFiltersBtn" class="btn btn-secondary" type="button">Reset</button>
+        </div>
+      </div>
+
+      <!-- RESOURCE GRID -->
+      <div id="resourcesGrid" class="resources-grid">
+        <!-- Populated dynamically by script.js -->
+      </div>
+    </section>
+
+    <!-- ==========================================
+         TAB 2: MY BOOKINGS, CHECK-IN & CHECK-OUT
+         ========================================== -->
+    <section id="bookingsTab" class="tab-panel hidden">
+      <div class="section-header-row">
+        <div>
+          <h1>My Bookings, Waiting List & Check-In/Out</h1>
+          <p class="text-muted">
+            Manage your reservations, complete pre-use condition check-ins, and log post-use returns.
+          </p>
+        </div>
+        <div class="filter-pills" id="myBookingFilterPills">
+          <button class="pill-btn active" data-bfilter="ALL" type="button">All</button>
+          <button class="pill-btn" data-bfilter="PENDING" type="button">Pending Approval</button>
+          <button class="pill-btn" data-bfilter="APPROVED" type="button">Approved (Ready for Check-In)</button>
+          <button class="pill-btn" data-bfilter="CHECKED_IN" type="button">In Use (Checked In)</button>
+          <button class="pill-btn" data-bfilter="WAITLISTED" type="button">Waitlisted</button>
+          <button class="pill-btn" data-bfilter="COMPLETED" type="button">Completed / Returned</button>
+        </div>
+      </div>
+
+      <div id="myBookingsContainer" class="bookings-list">
+        <!-- Populated dynamically by script.js -->
+      </div>
+    </section>
+
+    <!-- ==========================================
+         TAB 3: OWNER & LAB MANAGER CONSOLE
+         ========================================== -->
+    <section id="managerTab" class="tab-panel hidden">
+      <div class="manager-banner card">
+        <div>
+          <span class="badge-role-manager">🛡️ Human-in-the-Loop Governance</span>
+          <h2>Resource Owner & Lab Manager Console</h2>
+          <p class="text-muted">
+            Review booking requests, verify automated safety & fair-usage checks, resolve slot conflicts, and manage damaged or flagged equipment.
+          </p>
+        </div>
+        <div class="manager-quick-actions">
+          <button id="managerAddResourceBtn" class="btn btn-primary" type="button">
+            + List New Institutional Resource
+          </button>
+        </div>
+      </div>
+
+      <!-- MANAGER KPI CARDS -->
+      <div class="kpi-grid">
+        <div class="kpi-card">
+          <span class="kpi-label">Pending Requests</span>
+          <strong class="kpi-value text-warning" id="kpiPendingCount">0</strong>
+          <span class="kpi-sub">Awaiting human review</span>
+        </div>
+        <div class="kpi-card">
+          <span class="kpi-label">Currently Checked Out</span>
+          <strong class="kpi-value text-primary" id="kpiCheckedInCount">0</strong>
+          <span class="kpi-sub">Active sessions in progress</span>
+        </div>
+        <div class="kpi-card">
+          <span class="kpi-label">Waitlisted Requests</span>
+          <strong class="kpi-value" id="kpiWaitlistCount">0</strong>
+          <span class="kpi-sub">Fair-share queue active</span>
+        </div>
+        <div class="kpi-card">
+          <span class="kpi-label">Open Incident / Damage Reports</span>
+          <strong class="kpi-value text-danger" id="kpiIncidentCount">0</strong>
+          <span class="kpi-sub">Requires inspection</span>
+        </div>
+      </div>
+
+      <div class="manager-columns">
+        <!-- LEFT COLUMN: REQUEST QUEUE -->
+        <div class="manager-col-main">
+          <div class="card">
+            <div class="card-header-flex">
+              <h3>Incoming Booking & Access Requests</h3>
+              <select id="managerQueueFilter" class="select-sm">
+                <option value="PENDING_AND_WAITLIST">Pending & Waitlisted</option>
+                <option value="ACTIVE">Approved & Checked-In</option>
+                <option value="ALL">All Booking Records</option>
+              </select>
+            </div>
+            <div id="managerRequestsList" class="manager-requests-list">
+              <!-- Populated by script.js -->
+            </div>
+          </div>
+        </div>
+
+        <!-- RIGHT COLUMN: EQUIPMENT HEALTH & INCIDENTS -->
+        <div class="manager-col-side">
+          <div class="card">
+            <div class="card-header-flex">
+              <h3>Equipment Health & Status Control</h3>
+            </div>
+            <p class="text-xs text-muted mb-12">
+              Toggle maintenance locks or clear damage flags after physical inspection.
+            </p>
+            <div id="managerResourceHealthList" class="health-list">
+              <!-- Populated by script.js -->
+            </div>
+          </div>
+
+          <div class="card mt-16">
+            <div class="card-header-flex">
+              <h3>Recent Damage & Incident Reports</h3>
+            </div>
+            <div id="managerIncidentsList" class="incidents-list">
+              <!-- Populated by script.js -->
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ==========================================
+         TAB 4: IMMUTABLE AUDIT TRAIL & FAIRNESS LOG
+         ========================================== -->
+    <section id="auditTab" class="tab-panel hidden">
+      <div class="section-header-row">
+        <div>
+          <h1>Auditable Activity History & Incident Log</h1>
+          <p class="text-muted">
+            Every approval, rejection, waitlist placement, check-in, condition report, and incident is permanently recorded for institutional accountability.
+          </p>
+        </div>
+        <div class="audit-controls">
+          <input type="text" id="auditSearchInput" placeholder="Search by user, resource, or action..." class="input-sm" />
+          <select id="auditCategoryFilter" class="select-sm">
+            <option value="ALL">All Event Types</option>
+            <option value="BOOKING">Booking & Queue</option>
+            <option value="APPROVAL">Manager Decisions</option>
+            <option value="CHECKIN_OUT">Check-In / Return Condition</option>
+            <option value="INCIDENT">Damage & Incidents</option>
+            <option value="CERTIFICATION">Safety Certifications</option>
+            <option value="RESOURCE">Resource Listings</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="table-responsive">
+          <table class="audit-table">
+            <thead>
+              <tr>
+                <th>Timestamp</th>
+                <th>Event Category</th>
+                <th>Actor & Role</th>
+                <th>Resource / Target</th>
+                <th>Action & Transparent Justification</th>
+              </tr>
+            </thead>
+            <tbody id="auditTableBody">
+              <!-- Populated by script.js -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- =================================================================
+       MODAL 1: REQUEST BOOKING & FAIR-SHARE VERIFICATION
+       ================================================================= -->
+  <div id="bookingModal" class="modal-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="bookingModalTitle">
+    <div class="modal-card modal-lg">
+      <div class="modal-header">
+        <div>
+          <span class="modal-eyebrow">Steps 2–4: Eligibility, Conflict & Fair-Usage Check</span>
+          <h3 id="bookingModalTitle">Request Resource Access</h3>
+        </div>
+        <button class="modal-close" data-close="bookingModal" type="button" aria-label="Close">&times;</button>
+      </div>
+
+      <form id="bookingForm" class="modal-body">
+        <input type="hidden" id="bookResourceId" />
+
+        <!-- Resource Summary Banner inside Modal -->
+        <div id="bookingResourceSummary" class="resource-summary-banner"></div>
+
+        <!-- Automated Verification Checklist -->
+        <div id="bookingVerificationBox" class="verification-box">
+          <!-- Populated dynamically with Green/Red/Amber checks -->
+        </div>
+
+        <div class="form-grid-2">
+          <div class="form-group">
+            <label for="bookDate">Requested Date *</label>
+            <input type="date" id="bookDate" required />
+          </div>
+          <div class="form-group">
+            <label for="bookSlot">Time Slot (Max session cap enforced) *</label>
+            <select id="bookSlot" required>
+              <option value="09:00 - 11:00" data-hours="2">09:00 AM – 11:00 AM (2 hrs)</option>
+              <option value="11:00 - 13:00" data-hours="2">11:00 AM – 01:00 PM (2 hrs)</option>
+              <option value="14:00 - 16:00" data-hours="2">02:00 PM – 04:00 PM (2 hrs)</option>
+              <option value="16:00 - 18:00" data-hours="2">04:00 PM – 06:00 PM (2 hrs)</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Real-Time Slot Conflict Alert -->
+        <div id="slotConflictAlert" class="alert-box alert-warning hidden">
+          <strong>⚠️ Scheduling Conflict Detected:</strong>
+          <p id="slotConflictText"></p>
+        </div>
+
+        <div class="form-grid-2">
+          <div class="form-group">
+            <label for="bookProjectType">Academic / Community Usage Category *</label>
+            <select id="bookProjectType" required>
+              <option value="Academic Coursework / Thesis">Academic Coursework / Thesis</option>
+              <option value="Funded Research Project">Funded Research Project</option>
+              <option value="Student Innovation / Hackathon Prototype">Student Innovation / Hackathon Prototype</option>
+              <option value="Community / Startup Incubation">Community / Startup Incubation</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="bookSupervisor">Faculty Advisor / Reference Contact *</label>
+            <input type="text" id="bookSupervisor" placeholder="e.g., Dr. R. Subramanian (Dept. of Mech)" required />
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="bookPurpose">Detailed Statement of Purpose & Materials Used *</label>
+          <textarea id="bookPurpose" rows="3" placeholder="Explain what you are building/testing and confirm materials meet lab standards..." required></textarea>
+        </div>
+
+        <div class="checkbox-group">
+          <input type="checkbox" id="bookAgreeRules" required />
+          <label for="bookAgreeRules">
+            I agree to complete mandatory <strong>Before & After Condition Logs</strong>, follow all safety protocols, and accept responsibility for unreported misuse.
+          </label>
+        </div>
+
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-close="bookingModal">Cancel</button>
+          <button type="submit" id="submitBookingBtn" class="btn btn-primary">Submit Request</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- =================================================================
+       MODAL 2: CHECK-IN (INITIAL CONDITION RECORDING - STEP 7)
+       ================================================================= -->
+  <div id="checkInModal" class="modal-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="checkInModalTitle">
+    <div class="modal-card">
+      <div class="modal-header">
+        <div>
+          <span class="modal-eyebrow">Step 7: Pre-Use Verification & Handover</span>
+          <h3 id="checkInModalTitle">Resource Check-In & Initial Condition Log</h3>
+        </div>
+        <button class="modal-close" data-close="checkInModal" type="button">&times;</button>
+      </div>
+
+      <form id="checkInForm" class="modal-body">
+        <input type="hidden" id="checkInBookingId" />
+        <div id="checkInResourceInfo" class="info-callout mb-12"></div>
+
+        <div class="form-group">
+          <label for="checkInCondition">Observed Initial Condition Before Use *</label>
+          <select id="checkInCondition" required>
+            <option value="Excellent - Clean & Fully Operational">🟢 Excellent — Clean, calibrated & fully operational</option>
+            <option value="Good - Minor Cosmetic Wear">🟡 Good — Minor cosmetic wear, functions normally</option>
+            <option value="Pre-existing Issue Noticed">🟠 Pre-existing Issue Noticed (Document below to protect your deposit)</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label for="checkInNotes">Pre-Use Inspection Notes / Serial Verification *</label>
+          <textarea id="checkInNotes" rows="3" placeholder="e.g., Verified lens cap, nozzle clean, emergency stop button tested and working." required></textarea>
+        </div>
+
+        <div class="checkbox-group">
+          <input type="checkbox" id="checkInSafetyConfirm" required />
+          <label for="checkInSafetyConfirm">
+            I am physically present at the resource location, wearing required PPE, and have verified emergency shutoff procedures.
+          </label>
+        </div>
+
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-close="checkInModal">Cancel</button>
+          <button type="submit" class="btn btn-success">✅ Confirm Check-In & Start Session</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- =================================================================
+       MODAL 3: CHECK-OUT, RETURN & INCIDENT REPORT (STEPS 8 & 9)
+       ================================================================= -->
+  <div id="checkOutModal" class="modal-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="checkOutModalTitle">
+    <div class="modal-card">
+      <div class="modal-header">
+        <div>
+          <span class="modal-eyebrow">Steps 8 & 9: Return Confirmation & Incident Reporting</span>
+          <h3 id="checkOutModalTitle">Complete Return & Post-Use Condition Log</h3>
+        </div>
+        <button class="modal-close" data-close="checkOutModal" type="button">&times;</button>
+      </div>
+
+      <form id="checkOutForm" class="modal-body">
+        <input type="hidden" id="checkOutBookingId" />
+        <div id="checkOutInitialComparison" class="info-callout mb-12"></div>
+
+        <div class="form-group">
+          <label for="checkOutCondition">Final Condition Upon Return *</label>
+          <select id="checkOutCondition" required>
+            <option value="Excellent - Returned Clean & Ready">🟢 Excellent — Cleaned, powered down & ready for next user</option>
+            <option value="Good - Normal Consumable Wear">🟡 Good — Normal use, consumables noted below</option>
+            <option value="Damaged / Malfunction Occurred">🔴 Damaged / Technical Malfunction Occurred (Files Incident Report)</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label for="checkOutNotes">Post-Use Return Summary & Handover Notes *</label>
+          <textarea id="checkOutNotes" rows="3" placeholder="e.g., Workspace wiped down, build plate cleared, logbook signed." required></textarea>
+        </div>
+
+        <!-- Optional / Conditional Incident Report Box -->
+        <div id="incidentReportSection" class="incident-box hidden">
+          <h4>🚨 Damage, Delay or Safety Incident Report</h4>
+          <p class="text-xs text-muted mb-8">
+            Honest self-reporting protects community safety and avoids punitive penalties. This will alert the Lab Manager immediately.
+          </p>
+          <div class="form-group">
+            <label for="incidentSeverity">Incident Severity</label>
+            <select id="incidentSeverity">
+              <option value="LOW">Low — Minor consumable/calibration issue (Still usable)</option>
+              <option value="HIGH">High — Equipment damaged / unsafe (Lock resource for maintenance)</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="incidentDescription">What happened?</label>
+            <textarea id="incidentDescription" rows="2" placeholder="Describe the malfunction, broken component, or delay..."></textarea>
+          </div>
+        </div>
+
+        <div class="checkbox-group">
+          <input type="checkbox" id="ReportIncidentToggle" />
+          <label for="ReportIncidentToggle">
+            ⚠️ I need to report a damage, malfunction, or scheduling delay incident for this session
+          </label>
+        </div>
+
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-close="checkOutModal">Cancel</button>
+          <button type="submit" class="btn btn-primary">📦 Submit Return & Close Session</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- =================================================================
+       MODAL 4: LIST A NEW RESOURCE (STEP 1 OF LIFECYCLE)
+       ================================================================= -->
+  <div id="listResourceModal" class="modal-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="listResourceModalTitle">
+    <div class="modal-card modal-lg">
+      <div class="modal-header">
+        <div>
+          <span class="modal-eyebrow">Step 1: Owner Defines Conditions & Eligibility</span>
+          <h3 id="listResourceModalTitle">List an Underused Institutional Resource</h3>
+        </div>
+        <button class="modal-close" data-close="listResourceModal" type="button">&times;</button>
+      </div>
+
+      <form id="listResourceForm" class="modal-body">
+        <div class="form-grid-2">
+          <div class="form-group">
+            <label for="resName">Resource / Equipment / Space Name *</label>
+            <input type="text" id="resName" placeholder="e.g., Formlabs Form 3B SLA Bio-Printer" required />
+          </div>
+          <div class="form-group">
+            <label for="resCategory">Category *</label>
+            <select id="resCategory" required>
+              <option value="Fabrication & Makerspace">Fabrication & Makerspace</option>
+              <option value="Scientific & Lab">Scientific & Lab</option>
+              <option value="Media & Production">Media & Production</option>
+              <option value="Specialized Space">Specialized Space</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="form-grid-2">
+          <div class="form-group">
+            <label for="resOwnerDept">Owning Department / Organization *</label>
+            <input type="text" id="resOwnerDept" placeholder="e.g., Center for Biomedical Innovation" required />
+          </div>
+          <div class="form-group">
+            <label for="resLocation">Building & Room Location *</label>
+            <input type="text" id="resLocation" placeholder="e.g., Innovation Block B, Room 204" required />
+          </div>
+        </div>
+
+        <div class="form-grid-3">
+          <div class="form-group">
+            <label for="resRequiredCert">Required Safety Certification *</label>
+            <select id="resRequiredCert" required>
+              <option value="NONE">None (General Campus Access)</option>
+              <option value="CERT_3D">3D Printing & Rapid Prototyping L1</option>
+              <option value="CERT_LASER">Laser & CNC High-Power Safety L2</option>
+              <option value="CERT_BIO">Bio-Imaging & Cleanroom Protocol</option>
+              <option value="CERT_MEDIA">Pro Audio/Cinema Gear Handling</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="resMaxHours">Max Hours Per Booking *</label>
+            <select id="resMaxHours" required>
+              <option value="2">2 Hours Max (High Demand)</option>
+              <option value="4">4 Hours Max</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="resDeposit">Refundable Security Deposit / Credits *</label>
+            <input type="text" id="resDeposit" placeholder="e.g., ₹1,000 Institutional Hold (Free Use)" value="₹500 Refundable Hold (Free Academic Use)" required />
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="resRules">Usage Conditions, Supervision & Return Rules *</label>
+          <textarea id="resRules" rows="2" placeholder="e.g., Mandatory isopropyl bath cleanup after print. Staff supervision required for first-time users." required></textarea>
+        </div>
+
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-close="listResourceModal">Cancel</button>
+          <button type="submit" class="btn btn-primary">🚀 Publish Resource Listing</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- =================================================================
+       MODAL 5: SAFETY CERTIFICATION & QUICK TRAINING MODULE
+       ================================================================= -->
+  <div id="certModal" class="modal-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="certModalTitle">
+    <div class="modal-card">
+      <div class="modal-header">
+        <div>
+          <span class="modal-eyebrow">Step 2: Qualification & Eligibility Verification</span>
+          <h3 id="certModalTitle">Safety Certifications & Quick Micro-Assessment</h3>
+        </div>
+        <button class="modal-close" data-close="certModal" type="button">&times;</button>
+      </div>
+
+      <div class="modal-body">
+        <p class="text-sm text-muted mb-12">
+          Resources require verified qualifications before booking. For this hackathon demo, you can complete an instant safety verification check below to unlock restricted equipment for the active user.
+        </p>
+        <div id="certModalList" class="cert-modal-list">
+          <!-- Populated dynamically by script.js -->
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button type="button" class="btn btn-primary" data-close="certModal">Done</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- TOAST NOTIFICATION CONTAINER -->
+  <div id="toastContainer" class="toast-container" aria-live="polite"></div>
+
+  <!-- FOOTER -->
+  <footer class="site-footer">
+    <div class="container footer-inner">
+      <div>
+        <strong>⚡ EquipTrust</strong> — Built for the 48-Hour Institutional Resource Sharing Hackathon.
+      </div>
+      <div class="text-xs text-muted">
+        Human-in-the-Loop Governance • Fair-Usage Anti-Monopolization • Auditable Condition Logs
+      </div>
+    </div>
+  </footer>
+
+  <!-- Main JavaScript File -->
+  <script src="script.js"></script>
+</body>
+</html>
